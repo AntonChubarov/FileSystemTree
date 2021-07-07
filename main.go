@@ -39,10 +39,10 @@ func PrintFolder(path string, isLast bool, prefix []string) {
 
 	// modify folder tree-prefix and print
 	if isLast {
-		fmt.Println(PrefixToString(prefix) + lastPrefix + folderName)
+		fmt.Println(PrefixToString(prefix) + lastPrefix + folderName + " " + DirInfo(path))
 		prefix = append(prefix, emptyPrefix)
 	} else {
-		fmt.Println(PrefixToString(prefix) + nonLastPrefix + folderName)
+		fmt.Println(PrefixToString(prefix) + nonLastPrefix + folderName + " " + DirInfo(path))
 		prefix = append(prefix, linePrefix)
 	}
 
@@ -59,18 +59,22 @@ func PrintFolder(path string, isLast bool, prefix []string) {
 		if f.IsDir() {
 			PrintFolder(filepath.Join(path, fsoName), i == len(fso)-1, prefix)
 		} else {
-			PrintFile(fsoName, i == len(fso)-1, prefix)
+			PrintFile(f, i == len(fso)-1, prefix)
 		}
 	}
 }
 
-func PrintFile(name string, isLast bool, prefix []string) {
+func PrintFile(file os.DirEntry, isLast bool, prefix []string) {
 	// print line for current file
+	info, err := file.Info()
+	if err != nil {
+		log.Println(err)
+	}
 	if isLast {
-		fmt.Println(PrefixToString(prefix) + lastPrefix + name)
+		fmt.Println(PrefixToString(prefix) + lastPrefix + info.Name() + " " + FileSizeInfo(file))
 		prefix = append(prefix, emptyPrefix)
 	} else {
-		fmt.Println(PrefixToString(prefix) + nonLastPrefix + name)
+		fmt.Println(PrefixToString(prefix) + nonLastPrefix + info.Name() + " " + FileSizeInfo(file))
 		prefix = append(prefix, linePrefix)
 	}
 }
@@ -81,4 +85,37 @@ func PrefixToString(prefix []string) string {
 		s += p
 	}
 	return s
+}
+
+func DirInfo(path string) string {
+	folderCount, fileCount := DirCount(path)
+	output := "(" + fmt.Sprintf("%v", folderCount) + " folders, " + fmt.Sprintf("%v", fileCount) + " files)"
+	return output
+}
+
+func DirCount(path string) (folderCount int, fileCount int) {
+	fso, err := os.ReadDir(path)
+	if err != nil {
+		log.Println(err)
+	}
+	for _, f := range fso {
+		if f.IsDir() {
+			folderCount++
+		} else {
+			fileCount++
+		}
+	}
+	return
+}
+
+func FileSizeInfo(file os.DirEntry) (output string) {
+	info, err := file.Info()
+	if err != nil {
+		log.Println(err)
+	}
+	output += "("
+	output += fmt.Sprintf("%v", info.Size())
+	output += " Bytes"
+	output += ")"
+	return
 }
