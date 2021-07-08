@@ -24,10 +24,13 @@ func main() {
 	}
 	fmt.Println(currentFolder)
 
-	PrintFolder(currentFolder, true, make([]string, 1))
+	PrintFolder(currentFolder, true, true, make([]string, 1))
+
+	fmt.Println("Press Enter to exit")
+	fmt.Scanln()
 }
 
-func PrintFolder(path string, isLast bool, prefix []string) {
+func PrintFolder(path string, isInitial bool, isLast bool, prefix []string) {
 	// get folder name
 	var ss []string
 	if runtime.GOOS == "windows" {
@@ -38,7 +41,9 @@ func PrintFolder(path string, isLast bool, prefix []string) {
 	folderName := ss[len(ss)-1]
 
 	// modify folder tree-prefix and print
-	if isLast {
+	if isLast && isInitial {
+		fmt.Println(PrefixToString(prefix) + folderName + " " + DirInfo(path))
+	} else if isLast && !isInitial {
 		fmt.Println(PrefixToString(prefix) + lastPrefix + folderName + " " + DirInfo(path))
 		prefix = append(prefix, emptyPrefix)
 	} else {
@@ -57,7 +62,7 @@ func PrintFolder(path string, isLast bool, prefix []string) {
 		f := fso[i]
 		fsoName := f.Name()
 		if f.IsDir() {
-			PrintFolder(filepath.Join(path, fsoName), i == len(fso)-1, prefix)
+			PrintFolder(filepath.Join(path, fsoName), false, i == len(fso)-1, prefix)
 		} else {
 			PrintFile(f, i == len(fso)-1, prefix)
 		}
@@ -87,9 +92,32 @@ func PrefixToString(prefix []string) string {
 	return s
 }
 
-func DirInfo(path string) string {
+func DirInfo(path string) (output string) {
 	folderCount, fileCount := DirCount(path)
-	output := "(" + fmt.Sprintf("%v", folderCount) + " folders, " + fmt.Sprintf("%v", fileCount) + " files)"
+	output += "("
+
+	if folderCount == 0 && fileCount == 0 {
+		output += "empty)"
+		return
+	}
+
+	if folderCount == 1 {
+		output += "1 folder"
+	} else if folderCount > 1 {
+		output += fmt.Sprintf("%v", folderCount) + " folders"
+	}
+
+	if folderCount != 0 && fileCount != 0 {
+		output += ", "
+	}
+
+	if fileCount == 1 {
+		output += "1 file"
+	} else if fileCount > 1 {
+		output += fmt.Sprintf("%v", fileCount) + " files"
+	}
+
+	output += ")"
 	return output
 }
 
@@ -113,9 +141,13 @@ func FileSizeInfo(file os.DirEntry) (output string) {
 	if err != nil {
 		log.Println(err)
 	}
-	output += "("
-	output += fmt.Sprintf("%v", info.Size())
-	output += " Bytes"
-	output += ")"
+	size := info.Size()
+	if size >= 1024 && size < 1024*1024 {
+		output = "(" + fmt.Sprintf("%.2f", float32(size)/1024) + " KB)"
+	} else if size >= 1024*1024 {
+		output = "(" + fmt.Sprintf("%.2f", float32(size)/1024/1024) + " MB)"
+	} else {
+		output = "(" + fmt.Sprintf("%v", size) + " Bytes)"
+	}
 	return
 }
