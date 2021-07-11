@@ -1,7 +1,9 @@
 package main
 
 import (
+	"../config"
 	"fmt"
+	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,18 +18,22 @@ const (
 	emptyPrefix   = "    "
 )
 
+func init() {
+	if err := godotenv.Load(); err != nil {
+		log.Print("No .env file found")
+	}
+}
+
 func main() {
 
-	currentFolder, err := os.Getwd()
-	if err != nil {
-		log.Println(err)
-	}
-	fmt.Println(currentFolder)
+	appConfig := config.New()
 
-	PrintFolder(currentFolder, true, true, make([]string, 1))
+	fmt.Println(appConfig.IntitalFolder)
+
+	PrintFolder(appConfig.IntitalFolder, true, true, make([]string, 1))
 
 	fmt.Println("Press Enter to exit")
-	fmt.Scanln()
+	//fmt.Scanln()
 }
 
 func PrintFolder(path string, isInitial bool, isLast bool, prefix []string) {
