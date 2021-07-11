@@ -2,7 +2,8 @@ package main
 
 import (
 	"../config"
-	"fmt"
+	fmt "fmt"
+	colorText "github.com/daviddengcn/go-colortext"
 	"github.com/joho/godotenv"
 	"log"
 	"os"
@@ -28,11 +29,16 @@ func main() {
 
 	appConfig := config.New()
 
+	colorText.Foreground(appConfig.TextColor, false)
+
 	fmt.Println(appConfig.IntitalFolder)
 
 	PrintFolder(appConfig.IntitalFolder, true, true, make([]string, 1))
 
 	fmt.Println("Press Enter to exit")
+
+	colorText.ResetColor()
+
 	//fmt.Scanln()
 }
 

@@ -1,6 +1,7 @@
 package config
 
 import (
+	colorText "github.com/daviddengcn/go-colortext"
 	"log"
 	"os"
 	"strings"
@@ -8,7 +9,7 @@ import (
 
 type FileSystemTreeConfig struct {
 	IntitalFolder  string
-	TextColor      string
+	TextColor      colorText.Color
 	FileExtensions []string
 }
 
@@ -19,7 +20,7 @@ func New() *FileSystemTreeConfig {
 	}
 	return &FileSystemTreeConfig{
 		IntitalFolder:  getEnvAsString("INITIAL_FOLDER", currentFolder),
-		TextColor:      getEnvAsString("CONSOLE_TEXT_COLOR", "None"),
+		TextColor:      getEnvAsColor("CONSOLE_TEXT_COLOR", colorText.None),
 		FileExtensions: getEnvAsSlice("FILE_TYPES_TO_DISPLAY", []string{"*.go"}, " "),
 	}
 }
@@ -65,4 +66,30 @@ func getEnvAsSlice(name string, defaultVal []string, sep string) []string {
 	val := strings.Split(valStr, sep)
 
 	return val
+}
+
+func getEnvAsColor(name string, defaultVal colorText.Color) colorText.Color {
+	valStr := getEnv(name, "")
+
+	var colorMap = map[string]int{
+		"None":    0,
+		"Black":   1,
+		"Red":     2,
+		"Green":   3,
+		"Yellow":  4,
+		"Blue":    5,
+		"Magenta": 6,
+		"Cyan":    7,
+		"White":   8,
+	}
+
+	if valStr == "" {
+		return defaultVal
+	}
+
+	if val, ok := colorMap[valStr]; ok {
+		return colorText.Color(val)
+	}
+
+	return defaultVal
 }
